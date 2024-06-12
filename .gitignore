@@ -1,0 +1,11 @@
+# Ignorar archivos de respaldo y temporales
+*.bak
+*.swp
+*.tmp
+
+# Ignorar archivos de log
+*.log
+
+# Ignorar archivos de configuración de IDE
+.idea/
+.vscode/
