@@ -22,9 +22,9 @@ services:
       - 8080:80
     restart: always
     volumes:
-      - ./:/var/www/html/wp-content/plugins/testplugin
+      - ./:/var/www/html/wp-content/plugins/gscholarimporter
     environment:
-      VIRTUAL_HOST: testplugin.local
+      VIRTUAL_HOST:  gscholarimporter.local
       VIRTUAL_PORT: 80
       WORDPRESS_DB_HOST: mysql:3306
       WORDPRESS_DB_USER: wordpress
