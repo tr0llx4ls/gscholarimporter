@@ -31,9 +31,6 @@ register_deactivation_hook( __FILE__,'Desactivar');
 
 //Crear menu en el admin
 add_action('admin_menu','CreaMenu');
-
-//inicializa los parametros de la tabla de configuracion
-add_action('admin_init', 'gscholarimporter_settings_init');
  
 
 //Función que crea el menu
@@ -57,8 +54,50 @@ function CreaMenu(){
         'SubmenuSettings' //Funció
     );
 
+    add_action( 'admin_init', 'gscholarimporter_settings' );
 }
 
+function gscholarimporter_settings(){
+    //aci van el parametros
+    register_setting(
+        'Main options', //nom del grup
+        'serpapi_key', //nom de la opció
+        'gscholarimporter_callback' //funció de validació
+    );
+    register_setting(
+        'Main options', //nom del grup
+        'author_id', //nom de la opció
+        'gscholarimporter_callback' //funció de validació
+    );
+}
+
+function gscholarimporter_callback($input){
+    return $input;
+}
+
+function gscholarimporter_settings_page(){
+    ?>
+    <div>
+        <?php screen_icon(); ?>
+        <h2>GScholarImporter Settings</h2>
+        <form method="post" action="options.php">
+            <?php settings_fields( 'Main options' ); ?>
+            <h3>Main Settings</h3>
+            <p>
+                <label for="serpapi_key">API Key:</label>
+                <input type="text" id="serpapi_key" name="serpapi_key" value="<?php echo get_option('serpapi_key'); ?>" />
+            </p>
+            <p>
+                <label for="test_option">Author ID:</label>
+                <input type="text" id="author_id" name="author_id" value="<?php echo get_option('author_id'); ?>" />
+            </p>
+            <p>
+                <input type="submit" class="button-primary" value="Save Changes" />
+            </p>
+        </form>
+    </div>
+    <?php
+}
 //Función que crea el submenu   
 function SubmenuSettings(){
     include_once plugin_dir_path(__FILE__).'admin/settings.php';

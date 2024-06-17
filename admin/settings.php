@@ -8,5 +8,5 @@ if ( !current_user_can( 'manage_options' ) ) {
 
 // Render the page content
 ?>
-<h1>My Submenu Page</h1>
-<p>This is the content of my submenu page.</p>
+<?php
+gscholarimporter_settings_page();
