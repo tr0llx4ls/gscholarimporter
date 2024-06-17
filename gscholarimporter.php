@@ -1,52 +1,24 @@
 <?php
 /**
- * @package Test Plugin
+ * @package GScholarImporter
  * @version 0.0.1
  */
 /*
-Plugin Name: Test PLugin
-Plugin URI: https://github.com/tr0llx4ls/testplugin
-Description: This is a plugin done by tr0llx4ls to learn how to do them
+Plugin Name: GScholarImporter
+Plugin URI: https://github.com/tr0llx4ls/gscholarimporter
+Description: This is a plugin imports data from Google Scholar
 Version: 0.0.1
 Author URI: https://carlescalpe.es
 */
 
-//requires
-require_once plugin_dir_path(__FILE__).'clases/codigocorto.class.php';
 
+echo "Hola mundo";
 
 //Activar el plugin
 function Activar(){
     global $wpdb;
 
-    $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}encuestas(
-         `EncuestaId` INT NOT NULL AUTO_INCREMENT,
-         `Nombre` VARCHAR(45) NULL,
-         `ShortCode` VARCHAR(45) NULL,
-         PRIMARY KEY (`EncuestaId`))";
-
-    $wpdb->query($sql);
-
-    $sql2 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}encuestas_detalle(
-         `DetalleId` INT NOT NULL AUTO_INCREMENT,
-         `EncuestaId` INT NULL,
-         `Pregunta` VARCHAR(150) NULL,
-         `Tipo` VARCHAR(45) NULL,
-        PRIMARY KEY (`DetalleId`))";
-
-    $wpdb->query($sql2);
-
-    $sql3 = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}encuestas_respuesta(
-        `RespuestaId` INT NOT NULL AUTO_INCREMENT,
-        `DetalleId` INT NULL,
-        `Codigo` VARCHAR(45) NULL,
-        `Respuesta` VARCHAR(45) NULL,
-        PRIMARY KEY (`RespuestaId`))";
-
-    $wpdb->query($sql3);
-
-
-
+    //Crea una tabla que se llame gsi_settings que tenga un campo que se llame id y otro que se llame key y otro que se llame valu
 }
 //Desactivar el plugin
 function Desactivar(){
@@ -56,46 +28,41 @@ function Desactivar(){
 register_activation_hook(__FILE__, 'Activar');
 register_deactivation_hook( __FILE__,'Desactivar');
 
+
 //Crear menu en el admin
 add_action('admin_menu','CreaMenu');
+
+//inicializa los parametros de la tabla de configuracion
+add_action('admin_init', 'gscholarimporter_settings_init');
+ 
 
 //Función que crea el menu
 function CreaMenu(){
     add_menu_page(
-        'Plugin de test', //Titol del la pagina
-        'Test plugin', //Titol del menu
+        'GScholarImporter', //Titol del la pagina
+        'GSI', //Titol del menu
         'manage_options', //Capability -> A quin usuaris?
-        plugin_dir_path(__FILE__).'admin/lista_encuestas.php', //slug 
-        //'test_menu', //slug  -> Se gasta si es una función
+        plugin_dir_path(__FILE__).'admin/gscholarimporter_main.php', //slug 
         null, //Funció que mostra el contingut
-        //'MostrarContenido', //Funció que mostra el contingut
-        plugin_dir_url(__FILE__).'admin/img/icon.png', //Url e la imatge
+        plugin_dir_url(__FILE__).'admin/img/icon.svg', //Url e la imatge
         '1'//Posició
     ); 
 
     add_submenu_page(
-        plugin_dir_path(__FILE__).'admin/lista_encuestas.php', //slug del padre
-        'Ajustes', //Titol de la pagina
-        'Ajustes', //Titol del menu
+        plugin_dir_path(__FILE__).'admin/gscholarimporter_main.php', //slug del padre
+        'Settings', //Titol de la pagina
+        'Settings', //Titol del menu
         'manage_options', //Capability -> A quin usuaris?
-        'test_menu_ajustes', //slug
-        'Submenu' //Funció
+        'gscholarimporter_settings', //Funcio
+        'SubmenuSettings' //Funció
     );
+
 }
 
-//Crear Menu
-function MostrarContenido(){
-    echo "<h1>El plugin molon</h1>";
-
-    echo "<p>Esto es un plugin de prueba</p>";
+//Función que crea el submenu   
+function SubmenuSettings(){
+    include_once plugin_dir_path(__FILE__).'admin/settings.php';
 }
-
-//Crear submenu
-function Submenu(){
-    echo "<h1>Esto es el submenu</h1>";
-}
-
-
 //Encolar 
 
 //Encolar bootstrap
