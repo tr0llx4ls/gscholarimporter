@@ -1,0 +1,11 @@
+Necessite una funcio que li passen la cadena de autors
+-la esplitege per comes i faça un array 
+Per cada element del array
+ -si el campo coincideix exactament amb el camp x de un autor pose el seu enllaç,
+ -sino, que busque el cognom al camp apellidos i se mostrte com a proposta d'assignació
+ -Si aixi i tot no el troba que el mostre en blanc
+
+Per poder detectar el tipo de citació necessit tindre dos de cada per vore com se veu el json i extrapolar per induuccio
+
++
+Necessite una funció que comprov
