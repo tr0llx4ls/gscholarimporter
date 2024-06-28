@@ -12,13 +12,28 @@ Author URI: https://carlescalpe.es
 */
 
 
-echo "Hola mundo";
+//echo "Hola mundo";
 
 //Activar el plugin
 function Activar(){
     global $wpdb;
 
-    //Crea una tabla que se llame gsi_settings que tenga un campo que se llame id y otro que se llame key y otro que se llame valu
+    //Crea una tabla que se llame gsi_publicaciones que tengca los campos id, title, link, citation_id, authors y year de los cuales el id sea primary key y citation_id sea unique
+    $table_name = $wpdb->prefix.'gsi_publicaciones';
+    $charset_collate = $wpdb->get_charset_collate();
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        title text NOT NULL,
+        link text NOT NULL,
+        citation_id text NOT NULL,
+        authors text NOT NULL,
+        year text NOT NULL,
+        UNIQUE (citation_id),
+        PRIMARY KEY  (id)
+    ) $charset_collate;";
+    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+    dbDelta( $sql );
+
 }
 //Desactivar el plugin
 function Desactivar(){
@@ -45,6 +60,16 @@ function CreaMenu(){
         '1'//Posició
     ); 
 
+    // Página de preimportacion a la bd
+    add_submenu_page(
+        plugin_dir_path(__FILE__).'admin/gscholarimporter_main.php', // Slug del padre
+        'DB Pre Importer', // Título de la página
+        'DB Pre Importer', // Título del menú
+        'manage_options', // Capability
+        'gscholarimporter_db_pre_importer', // Slug
+        'PreImporter' // Función que muestra el contenido
+    );
+
     add_submenu_page(
         plugin_dir_path(__FILE__).'admin/gscholarimporter_main.php', //slug del padre
         'Settings', //Titol de la pagina
@@ -53,7 +78,6 @@ function CreaMenu(){
         'gscholarimporter_settings', //Funcio
         'SubmenuSettings' //Funció
     );
-
     add_action( 'admin_init', 'gscholarimporter_settings' );
 }
 
@@ -75,33 +99,27 @@ function gscholarimporter_callback($input){
     return $input;
 }
 
-function gscholarimporter_settings_page(){
-    ?>
-    <div>
-        <?php screen_icon(); ?>
-        <h2>GScholarImporter Settings</h2>
-        <form method="post" action="options.php">
-            <?php settings_fields( 'Main options' ); ?>
-            <h3>Main Settings</h3>
-            <p>
-                <label for="serpapi_key">API Key:</label>
-                <input type="text" id="serpapi_key" name="serpapi_key" value="<?php echo get_option('serpapi_key'); ?>" />
-            </p>
-            <p>
-                <label for="test_option">Author ID:</label>
-                <input type="text" id="author_id" name="author_id" value="<?php echo get_option('author_id'); ?>" />
-            </p>
-            <p>
-                <input type="submit" class="button-primary" value="Save Changes" />
-            </p>
-        </form>
-    </div>
-    <?php
-}
 //Función que crea el submenu   
 function SubmenuSettings(){
     include_once plugin_dir_path(__FILE__).'admin/settings.php';
 }
+
+//Función que crea el submenu   
+function PreImporter(){
+    include_once plugin_dir_path(__FILE__).'admin/preimporter.php';
+}
+
+function gscholarimporter_load_dynamic_content() {
+    // Aquí generas el contenido que quieres cargar dinámicamente.
+    // Por ejemplo, podrías hacer una consulta a la base de datos o realizar alguna otra operación.
+
+    $missatge = isset($_POST['missatge']) ? $_POST['missatge'] : '';
+    echo '<p> ' . $missatge . '</p>';
+    // No olvides detener la ejecución después de enviar la respuesta
+    wp_die();
+}
+add_action('wp_ajax_load_dynamic_content', 'gscholarimporter_load_dynamic_content');
+
 //Encolar 
 
 //Encolar bootstrap

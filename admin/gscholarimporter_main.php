@@ -15,66 +15,111 @@ if(get_option('serpapi_key') == '' || get_option('serpapi_key') == null){
     </div>';
     exit;
 }
-//Variables
+//Variables globales
+global $serpapi_key;
 $serpapi_key = get_option('serpapi_key');
-$author_id = get_option('author_id');
+
 
 //Funcion que muestra la cabecera del contenido de la pagina
-function gscholarimporter_main_header(){
+function gscholarimporter_header(){
     //aca va el contenido de la pagina
     echo '<h1>GScholarImporter</h1>';
     echo '<p>GScholarImporter is a plugin that allows you to import your Google Scholar publications to your WordPress site.</p>';
     echo '<p>It uses the <a href="https://serpapi.com/">SerpApi</a> API to get the publications from Google Scholar.</p>';
 }
 
+//Funcion que muestre la el pie del contenido de la pagina
+function gscholarimporter_footer(){
+    echo '<p>Desarrollado por <a href="https://reanimandowebs.com/">Reanmimando Webs</a></p>';
+    ?>
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        // Este código se ejecutará cuando el usuario haga clic en un botón con el ID 'load-content'
+        $('#load-content').click(function() {
+            $.ajax({
+                url: ajaxurl, // 'ajaxurl' es una variable definida por WordPress que contiene la URL para manejar solicitudes AJAX
+                type: 'POST',
+                data: {
+                    action: 'load_dynamic_content', // Este valor corresponde al hook de acción registrado en PHP
+                    missatge: 'fent proves' // Este valor se enviará al servidor como parte de la solicitud AJAX
+                },
+                success: function(response) {
+                    // Añade el contenido recibido a un elemento de tu página
+                    $('#dynamic-content').append(response);
+                    //quiero que lo añada a lo que ya hay
+
+                }
+            });
+        });
+    });
+    </script>
+    <?php
+}
+   
 //Funcion que muestra la pagina principal  del plugin
-function gscholarimporter_main_page($author_id, $serpapi_key){
+function gscholarimporter_main_page(){
     ?>
     <div class="wrap">
-        <?php gscholarimporter_main_header(); ?>
-        <?php $publicaciones = consulta_autor($author_id, $serpapi_key); ?>
-        <?php gscholarimporter_publicaciones_table($publicaciones); ?>
+        <?php
+        gscholarimporter_header();
+        echo '<button id="load-content">Cargar contenido dinámico</button>';
+        echo '<div id="dynamic-content"></div>';
+        $author_id = gscholarimporter_publicaciones_form();
+        if($author_id != ''){
+            $result = consulta_autor($author_id);
+            
+            echo '<pre>';
+            print_r($result);
+            echo '</pre>';
+
+            //gscholarimporter_publicaciones_table($result->publicaciones);
+        }
+        gscholarimporter_footer();?>
     </div>
     <?php
 }
- 
-function consulta_autor($id, $key, $start=0){
+
+function consulta_autor($author_id, $start=0 , $num=100, $sort="pubdate"){
     require plugin_dir_path( __FILE__ ).'google-search-results-php/google-search-results.php';
     require plugin_dir_path( __FILE__ ).'google-search-results-php/restclient.php';
-    
+    global $serpapi_key;
     $query = [
      "engine" => "google_scholar_author",
-     "author_id" => $id,
+     "author_id" => $author_id,
      "start" => $start,
-     "num" => 100,
-     "sort" => "pubdate",
+     "num" => $num,
+     "sort" => $sort,
     ];
     
-    $search = new GoogleSearch($key);
-    $result = $search->get_json($query);
-    $articles = $result->articles;
-    //return $result;
-    return $articles;
-
+    try {
+        $search = new GoogleSearch($serpapi_key);
+        $result = $search->get_json($query);
+        return $result;
+    } catch (Exception $e) {
+        // Manejar la excepción
+        echo '<div class="notice notice-error is-dismissible">
+        <p>GScholarImporter Error: ',  $e->getMessage(), '</p>
+        </div>';
+        return null; // O manejar de otra manera
+    }
 }
 
-function consulta_article($id, $key){
+function consulta_article($id){
     require plugin_dir_path( __FILE__ ).'google-search-results-php/google-search-results.php';
     require plugin_dir_path( __FILE__ ).'google-search-results-php/restclient.php';
-    
+    global $serpapi_key;
     $query = [
     "engine" => "google_scholar_author",
     "view_op" => "view_citation",
     "citation_id" => $id,
     ];
     
-    $search = new GoogleSearch($key);
+    $search = new GoogleSearch($serpapi_key);
     $result = $search->get_json($query);
     return $result;
 }
-
 //Funcion con action a este mismo fichero que crea un formulario para introducir el id de la citation_id de un articulo
-function gscholarimporter_article_form($key){
+function gscholarimporter_article_form(){
     ?>
     <form method="post" action="">
         <label for="citation_id">Citation ID:</label>
@@ -88,21 +133,14 @@ function gscholarimporter_article_form($key){
         $citation_id = $_POST['citation_id'];
 
         // Aquí puedes hacer algo con el $citation_id, como una consulta o validación
-        $articulo = consulta_article($citation_id, $key);
+        $articulo = consulta_article($citation_id);
         echo '<pre>';   
         print_r($articulo);
         echo '</pre>';
     }
 }
-// gscholarimporter_article_form($serpapi_key);
-// //$publicaciones = consulta_autor($author_id, $serpapi_key);
-// echo '<pre>';   
-// print_r($publicaciones); 
-// echo '</pre>';
 
-//Funcion que muestre unta tabla con las publicaciones y de ellas se muestre el titulo, con enlace, autores, año 
-//recibira un array de publicaciones
-//se podra paginar, buscar y ordenar por titulo, autores y año y seleccionar cuantas publicaciones se quieren mostrar
+//Funcion que muestre unta tabla con las publicaciones y de ellas se muestre el titulo, con enlace, autores, año y tipo
 function gscholarimporter_publicaciones_table($publicaciones){
     ?>
     <table class="wp-list-table widefat fixed striped">
@@ -110,7 +148,6 @@ function gscholarimporter_publicaciones_table($publicaciones){
             <tr class="manage-column column-">
                 <th class="manage-column column-number" style="width:3%;">#</th>
                 <th class="manage-column column-title column-primary sortable desc">Title</th>
-                //publication type
                 <th class="manage-column column-author">Type</th>
                 <th class="manage-column column-author">Authors</th>
                 <th class="manage-column column-date sorted desc">Year</th>
@@ -123,8 +160,7 @@ function gscholarimporter_publicaciones_table($publicaciones){
                 echo '<tr>';
                 echo '<td>'.$num.'</td>';
                 echo '<td><a href="'.$publicacion->link.'">'.$publicacion->title.'</a></td>';
-                //publication type
-
+                echo '<td> tipo x </td>';
                 echo '<td>'.$publicacion->authors.'</td>';
                 echo '<td>'.$publicacion->year.'</td>';
                 echo '</tr>';
@@ -135,4 +171,30 @@ function gscholarimporter_publicaciones_table($publicaciones){
     </table>
     <?php
 }
-gscholarimporter_main_page( $author_id, $serpapi_key);
+
+//Funcion con action a este mismo fichero que crea un formulario para introducir el id de un autor
+function gscholarimporter_publicaciones_form(){
+    global $author_id;
+    ?>
+    <form method="post" action="">
+        <label for="author_id">Author ID:</label>
+        <select name="author_id">
+            <option value="qawKnNkAAAAJ">JG Victores</option>
+            <option value="Ng8WUR4AAAAJ">C Balaguer</option>
+            <option value="1nlf7XQAAAAJ">MA Salichs</option>
+            <option value="1nlf7XQAAAJ">MAlito</option>
+        <input type="submit" value="Submit" />
+    </form>
+    <?php
+     // Verifica si el formulario ha sido enviado
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['author_id'])) {
+        // Recoge el valor de 'citation_id' del formulario enviado
+        $author_id = $_POST['author_id'];
+        return $author_id;}
+    else{
+        return '';
+    }
+}
+
+
+ gscholarimporter_main_page();

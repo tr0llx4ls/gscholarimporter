@@ -5,7 +5,52 @@ Per cada element del array
  -sino, que busque el cognom al camp apellidos i se mostrte com a proposta d'assignació
  -Si aixi i tot no el troba que el mostre en blanc
 
-Per poder detectar el tipo de citació necessit tindre dos de cada per vore com se veu el json i extrapolar per induuccio
 
-+
-Necessite una funció que comprov
+Per poder detectar el tipo de citació necessit tindre dos de cada per vore com se veu el json i extrapolar per induuccio
+ -Ja esta el excel, de moment trtrobats tots menos books
+
+Necessite una funció que comprove el tipo de contingut
+
+Necessite crear una bd intermitja on se baixen tots els continguts, no se sie en la mateixa taula o en varies
+Tindra un id , un citation id que seran unics
+Cal estudiar els caps que tenen els diferents tipos de contingut
+
+-La pàgina que fa açò es el preimporter que fa el seguent:
+Consegueix un id de usuari, de moment d'un form despres de una llista de rols i un camp on esdtasra el id
+
+Per cada author_id, comprobar que:
+-no esta buit
+aci invoquem la funcio de la query de la api amb start 0 i ho arrepleguem en result 
+ha de tenir try_catch
+
+-quan fas consulta dona success (search_metadata->status->Success)
+-quan fas consulta el json te un camp anomenat (author)
+-Que es mostra el camp articles ques es un array (articles)
+
+
+si el count de artyiclers es menor de 100 i major que 0
+
+
+si el count es 100
+while count==100
+echo anem ainsertr des del star al starty + 100
+Recorreguem el array articles que te com a maxim 100
+Co mprobem que el citation id no esta.
+  -si noe esta insertem citation id, title, i tot el que done
+  -si esta passem al seguent
+  start = starty + 100
+  articles = novas consulta am start
+  coutn articles
+  
+  ultima rodna
+Recorreguem el array articles que te com a maxim 100
+Co mprobem que el citation id no esta.
+  -si noe esta insertem citation id, title, i tot el que done
+  -si esta passem al seguent
+
+
+
+
+
+
+Title
