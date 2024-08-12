@@ -23,8 +23,8 @@ $serpapi_key = get_option('serpapi_key');
 
 //Funcion que consulta las publicaciones de un autor en google scholar
 function consulta_autor($author_id, $start=0 , $num=100, $sort="pubdate"){
-    require plugin_dir_path( __FILE__ ).'google-search-results-php/google-search-results.php';
-    require plugin_dir_path( __FILE__ ).'google-search-results-php/restclient.php';
+    require_once plugin_dir_path( __FILE__ ).'google-search-results-php/google-search-results.php';
+    require_once plugin_dir_path( __FILE__ ).'google-search-results-php/restclient.php';
     global $serpapi_key;
     $query = [
      "engine" => "google_scholar_author",
@@ -83,6 +83,7 @@ function insertar_publicacion($publicacion){
             $table_name,
             array(
                 'title' => $publicacion->title,
+                'status' => 'preimported', //por defecto preimportado
                 'link' => $publicacion->link,
                 'citation_id' => $publicacion->citation_id,
                 'authors' => $publicacion->authors,
@@ -108,6 +109,7 @@ function insertar_publicacion($publicacion){
 function importar_publicaciones($author_id){
     $start = 0;
     $num = 100;
+    $total = 0;
     $result = consulta_autor($author_id, $start, $num);
     if($author_id != ''){
         if($result->search_metadata->status != 'Success'){
@@ -131,27 +133,101 @@ function importar_publicaciones($author_id){
                     }
                 }
                 $start = $start + 100;
-                $result = consulta_autor($author_id, $start, $num);
+                $total = $total + $imported;
                 echo '<div class="notice notice-success is-dismissible">
-                <p>GScholarImporter: '. $imported . 'articles imported</p>
+                <p>GScholarImporter: '. $imported . ' articles imported</p>
                 </div>';
+                $result = consulta_autor($author_id, $start, $num);                
             }
         }
+        //importamos el resto
+        $imported = 0;
+        if($result->articles != null){
+            foreach($result->articles as $article){
+                if (insertar_publicacion($article)== true){
+                    $imported = $imported + 1;
+                }
+            }
+            $total = $total + $imported;
+            echo '<div class="notice notice-success is-dismissible">
+            <p>GScholarImporter: '. $imported . ' articles imported</p>
+            </div>';
+        }
+
         echo '<div class="notice notice-success is-dismissible">
-        <p>GScholarImporter: All articles imported</p>
+        <p>GScholarImporter: '. $total . ' articles imported</p> 
         </div>';
     }
 }
 
-
-
-///Tests
+//Funcion que muestre una tabla con el contenido de la tabla gsi_publicaciones, esta debe tener paginacion (por defecto 50 campos), ordenacion y busqueda debe usar las clases de wordpress
+function gscholarimporter_publicaciones_table(){
+    require_once(ABSPATH . 'wp-admin/includes/class-wp-list-table.php');
+    class GSI_Publicaciones_Table extends WP_List_Table {
+        function get_columns(){
+            $columns = array(
+                'cb'  => '<input type="checkbox" />', //Render a checkbox instead of text
+                'title' => 'Title',
+                //'link' => 'Link',
+                'citation_id' => 'Citation ID',
+                'authors' => 'Authors',
+                'year' => 'Year'
+            );
+            return $columns;
+        }
+        function column_default($item, $column_name){
+            return $item->$column_name;
+        }
+        function column_title($item){
+            $actions = array(
+                'edit' => sprintf('<a href="?page=%s&action=%s&citation_id=%s">Edit</a>',$_REQUEST['page'],'edit',$item->citation_id),
+                'delete' => sprintf('<a href="?page=%s&action=%s&citation_id=%s">Delete</a>',$_REQUEST['page'],'delete',$item->citation_id),
+            );
+            return sprintf('%1$s %2$s', $item->title, $this->row_actions($actions) );
+        }
+        function get_sortable_columns() {
+            $sortable_columns = array(
+                'title' => array('title',true),
+                'link' => array('link',true),
+                'citation_id' => array('citation_id',true),
+                'authors' => array('authors',true),
+                'year' => array('year',true)
+            );
+            return $sortable_columns;
+        }
+        function prepare_items() {
+            global $wpdb;
+            $table_name = $wpdb->prefix.'gsi_publicaciones';
+            $per_page = 50;
+            $columns = $this->get_columns();
+            $sortable = $this->get_sortable_columns();
+            $this->_column_headers = array($columns, array(), $sortable);
+            $this->process_bulk_action();
+            $data = $wpdb->get_results("SELECT * FROM $table_name");
+            $current_page = $this->get_pagenum();
+            $total_items = count($data);
+            $data = array_slice($data,(($current_page-1)*$per_page),$per_page);
+            $this->items = $data;
+            $this->set_pagination_args( array(
+                'total_items' => $total_items,
+                'per_page'    => $per_page
+            ) );
+            
+        }
+    } 
+    $table = new GSI_Publicaciones_Table();
+    $table->prepare_items();
+    echo '<div class="wrap"><h2>Publicaciones</h2>';
+    $table->display();
+    echo '</div>';
+}
 
 echo '<h1>GScholarImporter Preimporter</h1>';
 echo '<h2>Import Publications</h2>';
 
 $author_id = gscholarimporter_publicaciones_form();
-
-importar_publicaciones($author_id);
-
+if($author_id != ''){
+     importar_publicaciones($author_id);
+}
+gscholarimporter_publicaciones_table();
 ?> 

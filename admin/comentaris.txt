@@ -48,9 +48,8 @@ Co mprobem que el citation id no esta.
   -si noe esta insertem citation id, title, i tot el que done
   -si esta passem al seguent
 
+ fet
 
 
 
 
-
-Title

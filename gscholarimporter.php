@@ -10,9 +10,7 @@ Description: This is a plugin imports data from Google Scholar
 Version: 0.0.1
 Author URI: https://carlescalpe.es
 */
-
-
-//echo "Hola mundo";
+ 
 
 //Activar el plugin
 function Activar(){
@@ -20,19 +18,17 @@ function Activar(){
 
     //Crea una tabla que se llame gsi_publicaciones que tengca los campos id, title, link, citation_id, authors y year de los cuales el id sea primary key y citation_id sea unique
     $table_name = $wpdb->prefix.'gsi_publicaciones';
-    $charset_collate = $wpdb->get_charset_collate();
     $sql = "CREATE TABLE $table_name (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        title text NOT NULL,
-        link text NOT NULL,
-        citation_id text NOT NULL,
-        authors text NOT NULL,
-        year text NOT NULL,
-        UNIQUE (citation_id),
-        PRIMARY KEY  (id)
-    ) $charset_collate;";
-    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-    dbDelta( $sql );
+        `id` MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
+        `status` VARCHAR(45) NOT NULL,
+        `title` MEDIUMTEXT NOT NULL,
+        `link` MEDIUMTEXT NOT NULL,
+        `citation_id` VARCHAR(45) NOT NULL,
+        `authors` MEDIUMTEXT NOT NULL,
+        `year` VARCHAR(45) NOT NULL,
+        PRIMARY KEY (`id`),
+        UNIQUE INDEX `citation_id_UNIQUE` (`citation_id` ASC));";
+    $wpdb->query($sql);
 
 }
 //Desactivar el plugin
